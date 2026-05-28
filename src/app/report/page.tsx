@@ -59,7 +59,7 @@ export default function ReportPage() {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">計画実績比較レポート</h1>
+        <h1 className="text-2xl font-bold">計画実績比較</h1>
         <p className="text-sm text-gray-500 mt-1">月別の計画数量と実績数量を比較します</p>
       </div>
 
@@ -81,7 +81,7 @@ export default function ReportPage() {
       ) : (
         <>
           {/* サマリ */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-3 mb-6">
             <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
               <p className="text-xs text-gray-500 mb-1">計画合計</p>
               <p className="text-2xl font-bold text-blue-600">{totalPlanned.toLocaleString()}<span className="text-sm font-normal text-gray-500 ml-1">個</span></p>
@@ -116,7 +116,8 @@ export default function ReportPage() {
 
           {/* 明細テーブル */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[600px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">製品</th>
@@ -165,6 +166,7 @@ export default function ReportPage() {
                 </tr>
               </tfoot>
             </table>
+            </div>
           </div>
         </>
       )}

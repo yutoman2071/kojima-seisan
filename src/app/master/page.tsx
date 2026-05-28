@@ -31,7 +31,8 @@ function MasterTable<T extends { id: number; code: string; name: string }>({
       ) : items.length === 0 ? (
         <div className="text-center py-12 text-gray-400">{title}データがありません</div>
       ) : (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[480px]">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               {columns.map(c => (
@@ -64,6 +65,7 @@ function MasterTable<T extends { id: number; code: string; name: string }>({
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );
@@ -154,22 +156,22 @@ export default function MasterPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">マスタ管理</h1>
           <p className="text-sm text-gray-500 mt-1">製品・工程・作業者のマスタデータを管理します</p>
         </div>
         <button onClick={openNew}
-          className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 text-sm font-medium">
+          className="flex items-center justify-center gap-2 bg-gray-800 text-white px-4 py-2.5 rounded-lg hover:bg-gray-900 text-sm font-medium sm:w-auto">
           <Plus className="w-4 h-4" /> 新規登録
         </button>
       </div>
 
       {/* タブ */}
-      <div className="flex border-b border-gray-200 mb-4">
+      <div className="flex overflow-x-auto border-b border-gray-200 mb-4 -mx-4 px-4 md:mx-0 md:px-0">
         {tabs.map(t => (
           <button key={t.key} onClick={() => { setTab(t.key); setShowForm(false); }}
-            className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === t.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+            className={`shrink-0 px-5 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === t.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
             {t.label}
           </button>
         ))}
@@ -180,7 +182,7 @@ export default function MasterPage() {
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-4">
           <h2 className="text-sm font-semibold mb-4">{editId ? '編集' : '新規登録'}</h2>
           {error && <p className="text-red-600 text-sm mb-3">⚠️ {error}</p>}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             <div>
               <label className="text-xs text-gray-600 mb-1 block">コード *</label>
               <input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))}

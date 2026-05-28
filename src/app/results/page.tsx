@@ -226,13 +226,13 @@ export default function ResultsPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">実績記録</h1>
           <p className="text-sm text-gray-500 mt-1">生産実績を登録します</p>
         </div>
         <button onClick={openNew}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium">
+          className="flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 text-sm font-medium sm:w-auto">
           <Plus className="w-4 h-4" /> 実績を追加
         </button>
       </div>
@@ -249,7 +249,7 @@ export default function ResultsPage() {
         <div className="bg-green-50 border border-green-200 rounded-xl p-5 mb-4">
           <h2 className="text-sm font-semibold text-green-800 mb-4">{editId ? '実績を編集' : '新しい実績を追加'}</h2>
           {error && <p className="text-red-600 text-sm mb-3">⚠️ {error}</p>}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             <div>
               <label className="text-xs text-gray-600 mb-1 block">実績日 *</label>
               <input type="date" value={form.resultDate} onChange={e => setForm(f => ({ ...f, resultDate: e.target.value }))}
@@ -326,7 +326,8 @@ export default function ResultsPage() {
         ) : results.length === 0 ? (
           <div className="text-center py-12 text-gray-400">実績データがありません</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[700px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">実績日</th>
@@ -370,6 +371,7 @@ export default function ResultsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

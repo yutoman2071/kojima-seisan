@@ -114,14 +114,14 @@ export default function PlansPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">生産計画入力</h1>
           <p className="text-sm text-gray-500 mt-1">月別の生産計画を登録します</p>
         </div>
         <button
           onClick={openNew}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 text-sm font-medium sm:w-auto"
         >
           <Plus className="w-4 h-4" /> 計画を追加
         </button>
@@ -143,7 +143,7 @@ export default function PlansPage() {
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-4">
           <h2 className="text-sm font-semibold text-blue-800 mb-4">{editId ? '計画を編集' : '新しい計画を追加'}</h2>
           {error && <p className="text-red-600 text-sm mb-3">⚠️ {error}</p>}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             <div>
               <label className="text-xs text-gray-600 mb-1 block">計画日 *</label>
               <input type="date" value={form.planDate} onChange={e => setForm(f => ({ ...f, planDate: e.target.value }))}
@@ -201,7 +201,8 @@ export default function PlansPage() {
         ) : plans.length === 0 ? (
           <div className="text-center py-12 text-gray-400">計画データがありません</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">計画日</th>
@@ -239,6 +240,7 @@ export default function PlansPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
