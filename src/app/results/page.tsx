@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Check, Sparkles } from 'lucide-react';
 
 interface Product { id: number; code: string; name: string; unit: string; }
 interface Process { id: number; code: string; name: string; }
@@ -33,6 +33,40 @@ const EMPTY_FORM = {
   note: '',
 };
 
+// AIコメントポップアップ
+function AiCommentModal({
+  comment,
+  onClose,
+}: {
+  comment: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="p-2 bg-violet-100 rounded-lg">
+            <Sparkles className="w-5 h-5 text-violet-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900">AIからのコメント</h3>
+            <p className="text-xs text-gray-500">Claude AI による実績評価</p>
+          </div>
+        </div>
+        <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 mb-5">
+          <p className="text-sm text-gray-700 leading-relaxed">{comment}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-full bg-violet-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-violet-700 transition-colors"
+        >
+          閉じる
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ResultsPage() {
   const today = new Date();
   const [month, setMonth] = useState(today.toISOString().substring(0, 7));
@@ -46,6 +80,10 @@ export default function ResultsPage() {
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // AIコメント
+  const [aiComment, setAiComment] = useState('');
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -87,6 +125,48 @@ export default function ResultsPage() {
     setError('');
   };
 
+  const generateAiComment = async (savedResult: {
+    resultDate: string;
+    productId: number;
+    processId: number;
+    workerId: number | null;
+    actualQuantity: number;
+    actualHours: number | null;
+    defectQuantity: number;
+    note: string | null;
+  }) => {
+    setAiLoading(true);
+    try {
+      const product = products.find(p => p.id === savedResult.productId);
+      const process = processes.find(p => p.id === savedResult.processId);
+      const worker = savedResult.workerId ? workers.find(w => w.id === savedResult.workerId) : null;
+
+      const res = await fetch('/api/ai-result-comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resultDate: savedResult.resultDate,
+          productName: product?.name ?? '不明',
+          processName: process?.name ?? '不明',
+          workerName: worker?.name ?? undefined,
+          actualQuantity: savedResult.actualQuantity,
+          actualHours: savedResult.actualHours ?? undefined,
+          defectQuantity: savedResult.defectQuantity,
+          note: savedResult.note ?? undefined,
+        }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setAiComment(json.comment);
+      setShowAiModal(true);
+    } catch (e) {
+      console.error('AI comment error:', e);
+      // エラーの場合はモーダルを表示しない（サイレントに失敗）
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!form.resultDate || !form.productId || !form.processId || !form.actualQuantity) {
       setError('日付・製品・工程・実績数量は必須です');
@@ -110,6 +190,11 @@ export default function ResultsPage() {
       if (!res.ok) throw new Error((await res.json()).error);
       await fetchResults();
       setShowForm(false);
+
+      // 新規登録の場合のみAIコメントを生成
+      if (!editId) {
+        generateAiComment(body);
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : '保存に失敗しました');
     } finally {
@@ -125,6 +210,22 @@ export default function ResultsPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
+      {/* AIコメントモーダル */}
+      {showAiModal && (
+        <AiCommentModal
+          comment={aiComment}
+          onClose={() => setShowAiModal(false)}
+        />
+      )}
+
+      {/* AIコメント生成中のインジケーター */}
+      {aiLoading && (
+        <div className="fixed bottom-6 right-6 bg-violet-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 z-40">
+          <Sparkles className="w-4 h-4 animate-pulse" />
+          <span className="text-sm font-medium">AIコメントを生成中...</span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">実績記録</h1>
@@ -209,6 +310,12 @@ export default function ResultsPage() {
               <X className="w-4 h-4" /> キャンセル
             </button>
           </div>
+          {!editId && (
+            <p className="text-xs text-violet-600 mt-3 flex items-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              保存後、AIが実績データを自動評価してコメントを生成します
+            </p>
+          )}
         </div>
       )}
 

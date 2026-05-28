@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { TrendingUp, Package, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Package, AlertTriangle, Sparkles, RefreshCw } from 'lucide-react';
 
 interface DashboardData {
   plannedQty: number;
@@ -49,6 +49,93 @@ function ClipboardIcon({ className }: { className?: string }) {
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
     </svg>
+  );
+}
+
+function AiAdviceSection({ data }: { data: DashboardData }) {
+  const [advice, setAdvice] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [generated, setGenerated] = useState(false);
+
+  const generateAdvice = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/ai-advice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setAdvice(json.advice);
+      setGenerated(true);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'エラーが発生しました');
+    } finally {
+      setLoading(false);
+    }
+  }, [data]);
+
+  // アドバイスのテキストを箇条書き行に分割して表示
+  const renderAdviceLines = (text: string) => {
+    return text.split('\n').filter(line => line.trim()).map((line, i) => (
+      <p key={i} className="text-sm text-gray-700 leading-relaxed">
+        {line}
+      </p>
+    ));
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-xl border border-violet-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-violet-600" />
+          <h2 className="text-base font-semibold text-violet-900">AIアドバイス</h2>
+          <span className="text-xs bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full font-medium">
+            Claude AI
+          </span>
+        </div>
+        <button
+          onClick={generateAdvice}
+          disabled={loading}
+          className="flex items-center gap-1.5 bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-violet-700 disabled:opacity-50 transition-colors"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          {loading ? '生成中...' : generated ? '再生成' : 'アドバイスを生成'}
+        </button>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+          ⚠️ {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex items-center gap-3 py-4">
+          <div className="flex gap-1">
+            <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+          <span className="text-sm text-violet-600">AIが生産データを分析しています...</span>
+        </div>
+      )}
+
+      {!loading && !generated && !error && (
+        <p className="text-sm text-gray-500 py-2">
+          ボタンを押すと、今月の生産計画・実績データをAIが分析して改善アドバイスを生成します。
+        </p>
+      )}
+
+      {!loading && advice && (
+        <div className="space-y-2 mt-1">
+          {renderAdviceLines(advice)}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -119,7 +206,7 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <h2 className="text-base font-semibold mb-4">直近7日間の生産実績</h2>
             {data.dailyResults.length === 0 ? (
               <p className="text-center text-gray-400 py-12">実績データがありません</p>
@@ -148,6 +235,9 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             )}
           </div>
+
+          {/* AIアドバイスセクション */}
+          <AiAdviceSection data={data} />
         </>
       )}
     </div>
